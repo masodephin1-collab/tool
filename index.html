@@ -3,173 +3,320 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Báo Lỗi - 3D Dark Glass</title>
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <title>Hệ Thống Báo Lỗi - Glassmorphism UI</title>
+    
+    <!-- Import font theo chuẩn của bạn -->
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Noto+Serif:wght@400;700&display=swap&subset=vietnamese" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- SweetAlert2 cho thông báo xịn -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        :root {
-            --primary: #6366f1;         
-            --secondary: #8b5cf6;       
-            --success: #10b981;         
-            --danger: #ef4444;          
-            --warning: #f59e0b;         
-            --text-main: #f8fafc;       
-            --text-muted: #94a3b8;      
-            --border-glass: rgba(255, 255, 255, 0.1);
-            --bg-glass: rgba(15, 23, 42, 0.6); /* Kính mờ màu tối */
+        /* =========================================
+           UI CHUNG CỦA APP
+           ========================================= */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Be Vietnam Pro', Tahoma, Arial, sans-serif !important;
+            -webkit-font-smoothing: antialiased !important;
         }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Quicksand', sans-serif; }
 
         body {
-            color: var(--text-main);
+            /* Hình nền giống với trang Login của bạn */
+            background: url('https://c.wallhere.com/photos/da/70/digital_art_landscape_illustration_skyline-2285476.jpg!d') no-repeat center center fixed;
+            background-size: cover;
             min-height: 100vh;
-            padding: 40px 15px;
             display: flex;
             justify-content: center;
-            overflow-x: hidden;
+            align-items: flex-start;
+            padding: 30px 15px;
             position: relative;
+            color: #fff;
         }
 
-        /* Nền Three.js */
-        #canvas-container {
+        /* Lớp phủ làm tối hình nền */
+        body::before {
+            content: '';
             position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px); /* Độ mờ vừa phải */
+            -webkit-backdrop-filter: blur(8px);
             z-index: -1;
-            background: #0f172a; /* Xanh đen */
         }
 
-        .container {
+        .main-wrapper {
             width: 100%;
-            max-width: 850px;
+            max-width: 900px;
             display: flex;
             flex-direction: column;
-            gap: 30px; 
-            z-index: 1;
+            gap: 25px;
         }
 
-        /* Thẻ Card - Dark Glassmorphism */
-        .card {
-            background-color: var(--bg-glass);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-radius: 20px;
-            padding: 35px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--border-glass);
+        /* =========================================
+           KHUNG KÍNH MỜ (Glass Container)
+           ========================================= */
+        .glass-container {
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 30px 35px;
+            position: relative;
+            animation: overlayFadeIn 0.4s ease forwards;
         }
 
-        h2, h3 { font-weight: 700; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; color: #ffffff; }
-        h2 { font-size: 24px; padding-bottom: 15px; border-bottom: 1px solid var(--border-glass); }
-        h3 { font-size: 20px; }
+        h2, h3 {
+            text-align: center;
+            margin-top: 0;
+            color: #fff;
+            text-transform: uppercase;
+        }
+        
+        h2 {
+            font-size: 24px;
+            margin-bottom: 25px;
+            color: #fde047; /* Vàng như thẻ Tiêu đề */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
+        }
 
-        .form-group { margin-bottom: 25px; }
-        .form-group label { display: block; font-weight: 600; margin-bottom: 10px; color: #e2e8f0; font-size: 15px; }
+        h3 {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: rgba(255,255,255,0.9);
+            font-size: 14.5px;
+            font-weight: 600;
+        }
+
+        .red-star { color: #ff4d4d; }
+
+        /* Ô Nhập Liệu */
+        .input-box { position: relative; width: 100%; margin-bottom: 20px; }
         
         .form-control {
-            width: 100%; padding: 15px 18px; border: 1px solid var(--border-glass); border-radius: 12px;
-            font-size: 15px; background: rgba(0, 0, 0, 0.3); color: #ffffff;
-            transition: all 0.3s ease; outline: none; font-weight: 500;
+            width: 100%;
+            background: transparent !important;
+            border: 2px solid rgba(255, 255, 255, 0.2) !important;
+            border-radius: 6px !important;
+            font-size: 15px !important;
+            color: #fff !important;
+            padding: 12px 15px !important;
+            box-shadow: none !important;
+            outline: none;
+            transition: 0.2s;
         }
-        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); background: rgba(0,0,0,0.5); }
-        .form-control::placeholder { color: #64748b; font-weight: 500;}
-        textarea.form-control { min-height: 110px; resize: vertical; }
+        
+        .form-control:focus {
+            border-color: #fde047 !important;
+            background: rgba(255,255,255,0.05) !important;
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.6) !important;
+        }
+        
+        textarea.form-control { resize: vertical; min-height: 90px; }
 
         /* Lưới Task */
-        .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; margin-bottom: 30px; }
+        .task-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        
         .task-label { cursor: pointer; display: block; }
         .task-label input { display: none; }
         
         .task-box {
-            background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); border-radius: 12px; padding: 12px 10px;
-            text-align: center; font-weight: 600; font-size: 14px; color: var(--text-muted);
-            transition: all 0.3s ease; user-select: none;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            font-size: 13.5px;
+            font-weight: 500;
+            color: #e2e8f0;
+            transition: 0.2s;
+            user-select: none;
         }
-        .task-label:hover .task-box { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
         
+        .task-label:hover .task-box { background: rgba(255,255,255,0.15); }
+
         .task-label input:checked + .task-box {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: #ffffff; border-color: transparent; box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3); transform: translateY(-2px);
+            background: rgba(253, 224, 71, 0.15); /* Vàng nhạt */
+            border-color: #fde047;
+            color: #fde047;
+            font-weight: 600;
+            transform: translateX(2px);
         }
 
+        /* Nút Bấm Chung */
         .btn {
-            background: linear-gradient(135deg, var(--primary), var(--secondary)); 
-            color: white; border: none; padding: 16px 20px; font-size: 15px; font-weight: 700;
-            border-radius: 12px; cursor: pointer; width: 100%; transition: all 0.3s ease;
-            box-shadow: 0 8px 15px rgba(99, 102, 241, 0.25);
+            width: 100%;
+            height: 42px;
+            background: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 700;
+            color: #333;
+            transition: 0.2s;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
         }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 20px rgba(99, 102, 241, 0.4); }
         
-        .btn-danger { background: var(--danger); box-shadow: 0 8px 15px rgba(239, 68, 68, 0.2);}
-        .btn-danger:hover { background: #dc2626; box-shadow: 0 12px 20px rgba(239, 68, 68, 0.4); }
+        .btn:hover { background: #eee; transform: translateY(-1px); }
+        .btn:active { transform: translateY(1px); }
         
-        .btn-success { background: rgba(16, 185, 129, 0.2); color: var(--success); width: auto; padding: 8px 16px; font-size: 14px; box-shadow: none; border: 1px solid var(--success);}
-        .btn-success:hover { background: var(--success); color: white; transform: translateY(-2px);}
-        
-        .btn-secondary { background: rgba(255,255,255,0.1); color: #ffffff; box-shadow: none; border: 1px solid var(--border-glass);}
+        /* Custom Nút Bấm */
+        .btn-submit {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: 1.5px solid #34d399;
+        }
+        .btn-submit:hover { filter: brightness(1.1); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
+
+        .btn-danger {
+            background: #d32f2f;
+            color: white;
+            border: none;
+            width: auto;
+            padding: 0 15px;
+        }
+        .btn-danger:hover { background: #b71c1c; }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.3);
+            width: auto;
+            padding: 0 15px;
+        }
         .btn-secondary:hover { background: rgba(255,255,255,0.2); }
 
-        /* KHU VỰC CÓ THANH CUỘN (SCROLL) */
+        .btn-fix {
+            background: linear-gradient(135deg, #0f766e, #059669);
+            color: white;
+            border: none;
+            width: auto;
+            padding: 6px 12px;
+            height: auto;
+            font-size: 13px;
+        }
+        .btn-fix:hover { filter: brightness(1.1); }
+
+        /* Thanh Cuộn */
         .report-list { 
-            display: flex; flex-direction: column; gap: 15px; 
-            max-height: 450px; /* Giới hạn chiều cao */
-            overflow-y: auto;  /* Bật scroll dọc */
-            padding-right: 10px; /* Tạo khoảng trống cho thanh cuộn */
+            display: flex; flex-direction: column; gap: 12px; 
+            max-height: 400px; 
+            overflow-y: auto;  
+            padding-right: 8px; 
         }
         
-        /* Tùy chỉnh thanh cuộn cho đẹp */
-        .report-list::-webkit-scrollbar { width: 6px; }
-        .report-list::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 10px; }
-        .report-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
-        .report-list::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }
+        .report-list::-webkit-scrollbar { width: 5px; }
+        .report-list::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 5px; }
+        .report-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 5px; }
 
+        /* Item Báo Cáo */
         .report-item {
-            background: rgba(0, 0, 0, 0.2); border-radius: 14px; padding: 20px;
-            border: 1px solid var(--border-glass); border-left: 4px solid var(--warning); 
-            display: flex; flex-direction: column; gap: 12px; transition: 0.3s;
+            background: rgba(20, 20, 30, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #f59e0b; 
+            border-radius: 10px;
+            padding: 15px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: 0.2s;
         }
-        .report-item:hover { background: rgba(0, 0, 0, 0.4); }
-        .report-item.fixed { border-left-color: var(--success); opacity: 0.75;}
+        .report-item:hover { background: rgba(20, 20, 30, 0.8); }
+        .report-item.fixed { border-left-color: #10b981; opacity: 0.8; }
         
         .report-header { display: flex; justify-content: space-between; align-items: center; }
-        .report-user { font-weight: 700; font-size: 16px; color: #ffffff; }
-        .report-time { font-size: 12px; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 20px;}
+        .report-user { font-weight: 700; font-size: 15px; color: #fff; }
+        .report-time { font-size: 12px; color: #a1a1aa; }
         
-        .report-note { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; font-size: 14px; color: #cbd5e1; border: 1px dashed var(--border-glass);}
+        .report-note { 
+            background: rgba(255,255,255,0.04); 
+            padding: 10px; 
+            border-radius: 6px; 
+            font-size: 13px; 
+            color: #cbd5e1; 
+            border: 1px dashed rgba(255,255,255,0.15);
+        }
         
-        .tags { display: flex; flex-wrap: wrap; gap: 8px;}
-        .tag { background: rgba(239, 68, 68, 0.15); color: #fca5a5; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid rgba(239,68,68,0.3);}
-        .report-item.fixed .tag { background: rgba(255,255,255,0.05); color: #94a3b8; border-color: transparent; text-decoration: line-through;}
+        .tags { display: flex; flex-wrap: wrap; gap: 6px;}
+        .tag { 
+            background: rgba(239, 68, 68, 0.15); 
+            color: #fca5a5; 
+            padding: 4px 8px; 
+            border-radius: 4px; 
+            font-size: 11.5px; 
+            font-weight: 600; 
+            border: 1px solid rgba(239,68,68,0.3);
+        }
+        .report-item.fixed .tag { 
+            background: rgba(255,255,255,0.05); 
+            color: #94a3b8; 
+            border-color: transparent; 
+            text-decoration: line-through;
+        }
 
-        .action-area { display: flex; justify-content: flex-end; align-items: center; border-top: 1px solid var(--border-glass); padding-top: 12px; margin-top: 5px;}
-        .status-badge { font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 8px;}
-        .status-pending { background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.2);}
-        .status-fixed { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2);}
+        .action-area { 
+            display: flex; justify-content: flex-end; align-items: center; 
+            border-top: 1px solid rgba(255,255,255,0.1); 
+            padding-top: 10px; margin-top: 5px;
+        }
+        
+        .status-badge { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px;}
+        .status-pending { background: rgba(245, 158, 11, 0.1); color: #fde047; border: 1px solid rgba(245, 158, 11, 0.3);}
+        .status-fixed { background: rgba(16, 185, 129, 0.1); color: #4ade80; border: 1px solid rgba(16, 185, 129, 0.3);}
 
-        .admin-login { display: flex; gap: 12px; }
-        .admin-login button { width: auto; flex-shrink: 0; }
+        .admin-login { display: flex; gap: 10px; }
+        .admin-login .btn { width: auto; flex-shrink: 0; }
+        
         .hidden { display: none !important; }
-        .red-star { color: var(--danger); }
+
+        @keyframes overlayFadeIn { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        /* Tùy chỉnh SweetAlert2 cho hợp giao diện Kính mờ */
+        .swal-glass {
+            background: rgba(20, 20, 30, 0.95) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            color: #fff !important;
+            backdrop-filter: blur(10px);
+        }
     </style>
 </head>
 <body>
 
-<!-- Nền 3D Vũ trụ -->
-<div id="canvas-container"></div>
-
-<div class="container">
-    <!-- FORM BÁO LỖI -->
-    <div class="card" id="userPanel">
-        <h2>✨ Báo Cáo Nhiệm Vụ Lỗi</h2>
+<div class="main-wrapper">
+    <!-- KHU VỰC 1: FORM BÁO LỖI -->
+    <div class="glass-container" id="userPanel">
+        <h2>🛠️ Báo Cáo Nhiệm Vụ Lỗi</h2>
         
         <div class="form-group">
             <label for="reporterName">Tên nhân vật / Người báo cáo <span class="red-star">*</span></label>
             <input type="text" id="reporterName" class="form-control" placeholder="Nhập tên của bạn...">
         </div>
         
-        <label style="font-weight: 600; margin-bottom: 12px; display: block; color: #e2e8f0; font-size: 15px;">Vui lòng chọn các nhiệm vụ bị lỗi: <span class="red-star">*</span></label>
+        <label style="font-weight: 600; margin-bottom: 12px; display: block; color: rgba(255,255,255,0.9); font-size: 14.5px;">Vui lòng chọn các nhiệm vụ bị lỗi: <span class="red-star">*</span></label>
         <div class="task-grid" id="taskGrid">
             <!-- JS Render -->
         </div>
@@ -179,115 +326,48 @@
             <textarea id="errorNote" class="form-control" placeholder="Mô tả cụ thể vấn đề..."></textarea>
         </div>
         
-        <button id="btnSubmit" class="btn">🚀 Gửi Lên Hệ Thống</button>
+        <button id="btnSubmit" class="btn btn-submit">🚀 Gửi Lên Hệ Thống</button>
     </div>
 
-    <!-- DANH SÁCH CÓ THANH CUỘN -->
-    <div class="card" id="publicReportArea">
+    <!-- KHU VỰC 2: DANH SÁCH LỖI -->
+    <div class="glass-container" id="publicReportArea">
         <h3>📋 Nhật Ký Báo Cáo</h3>
         <div class="report-list" id="reportList">
-            <div style="text-align:center; padding: 20px; color: var(--text-muted); font-weight: 500;">Đang tải dữ liệu...</div>
+            <div style="text-align:center; padding: 20px; color: #a1a1aa; font-size: 14px;">Đang tải dữ liệu...</div>
         </div>
     </div>
 
-    <!-- ADMIN -->
-    <div class="card admin-section">
+    <!-- KHU VỰC 3: QUẢN TRỊ VIÊN -->
+    <div class="glass-container admin-section">
         <h3>🛡 Dành Cho Quản Trị Viên</h3>
         
         <div class="admin-login" id="adminLoginArea">
             <input type="password" id="adminCode" class="form-control" placeholder="Mã truy cập Admin...">
-            <button id="btnLoginAdmin" class="btn btn-secondary">Đăng Nhập</button>
+            <button id="btnLoginAdmin" class="btn">Đăng Nhập</button>
         </div>
         
         <div id="adminPanel" class="hidden">
-            <div style="background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 12px; border-radius: 12px; text-align: center; margin-bottom: 20px; font-weight: 600; border: 1px solid rgba(16,185,129,0.3);">
-                Đã mở khóa quyền Admin.
+            <div style="background: rgba(16, 185, 129, 0.1); color: #4ade80; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 20px; font-weight: 600; border: 1px solid rgba(16,185,129,0.3); font-size: 13.5px;">
+                ✅ Đã mở khóa quyền Admin
             </div>
             <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button id="btnDeleteAll" class="btn btn-danger" style="width: auto;">🗑️ Xóa Toàn Bộ Lịch Sử</button>
-                <button id="btnLogoutAdmin" class="btn btn-secondary" style="width: auto;">🚪 Đăng Xuất</button>
+                <button id="btnDeleteAll" class="btn btn-danger">🗑️ Xóa Toàn Bộ Lịch Sử</button>
+                <button id="btnLogoutAdmin" class="btn btn-secondary">🚪 Đăng Xuất</button>
             </div>
         </div>
     </div>
+    
+    <!-- Dòng Credit giống style gốc -->
+    <div style="text-align: center; color: rgba(255,255,255,0.6); font-size: 12px; margin-top: -10px;">
+        Made by TuanApple
+    </div>
 </div>
 
-<!-- Script Three.js -->
-<script>
-    const initThreeJS = () => {
-        const container = document.getElementById('canvas-container');
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x0f172a, 0.001);
-
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 2000);
-        camera.position.z = 800;
-
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        container.appendChild(renderer.domElement);
-
-        const geometry = new THREE.BufferGeometry();
-        const particleCount = 3000; 
-        const posArray = new Float32Array(particleCount * 3);
-        const colorArray = new Float32Array(particleCount * 3);
-
-        const color1 = new THREE.Color(0x6366f1); 
-        const color2 = new THREE.Color(0x8b5cf6); 
-        const color3 = new THREE.Color(0xffffff);
-        
-        for(let i = 0; i < particleCount * 3; i+=3) {
-            posArray[i] = (Math.random() - 0.5) * 3000;
-            posArray[i+1] = (Math.random() - 0.5) * 3000;
-            posArray[i+2] = (Math.random() - 0.5) * 3000;
-
-            let mixedColor = color1.clone().lerp(color2, Math.random());
-            if(Math.random() > 0.8) mixedColor = color3; // Điểm xuyết sao trắng
-
-            colorArray[i] = mixedColor.r;
-            colorArray[i+1] = mixedColor.g;
-            colorArray[i+2] = mixedColor.b;
-        }
-        
-        geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-        geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
-        
-        const material = new THREE.PointsMaterial({ size: 4, vertexColors: true, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending });
-        const particlesMesh = new THREE.Points(geometry, material);
-        scene.add(particlesMesh);
-
-        let mouseX = 0, mouseY = 0;
-        document.addEventListener('mousemove', (e) => {
-            mouseX = (e.clientX - window.innerWidth / 2) * 0.0005;
-            mouseY = (e.clientY - window.innerHeight / 2) * 0.0005;
-        });
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        const animate = () => {
-            requestAnimationFrame(animate);
-            particlesMesh.rotation.y += 0.001;
-            particlesMesh.rotation.x += 0.0005;
-            
-            camera.position.x += (mouseX * 500 - camera.position.x) * 0.05;
-            camera.position.y += (-mouseY * 500 - camera.position.y) * 0.05;
-            camera.lookAt(scene.position);
-            
-            renderer.render(scene, camera);
-        };
-        animate();
-    }
-    initThreeJS();
-</script>
-
-<!-- Script Logic Firebase -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getDatabase, ref, push, set, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
+    // Thay thế bằng Config thật của bạn
     const firebaseConfig = {
         apiKey: "AIzaSyB2doYct57cRcL49oNGNumWrLJmRtsKQGg",
         authDomain: "chatvnnn-867f6.firebaseapp.com",
@@ -303,9 +383,13 @@
     const adminCodeStr = "abc1"; 
     let isAdmin = false;
 
+    // Cấu hình SweetAlert2 tối màu
     const Toast = Swal.mixin({
-        background: '#1e293b', color: '#f8fafc',
-        customClass: { popup: 'swal2-popup-custom', confirmButton: 'btn', cancelButton: 'btn btn-secondary' },
+        customClass: { 
+            popup: 'swal-glass', 
+            confirmButton: 'btn btn-submit', 
+            cancelButton: 'btn btn-secondary' 
+        },
         buttonsStyling: false
     });
 
@@ -340,11 +424,12 @@
         taskGrid.appendChild(label);
     });
 
+    // NÚT GỬI BÁO CÁO
     document.getElementById('btnSubmit').addEventListener('click', () => {
         const reporterName = document.getElementById('reporterName').value.trim();
         const errorNote = document.getElementById('errorNote').value.trim();
 
-        if (!reporterName) { Toast.fire({ icon: 'warning', title: 'Thiếu thông tin', text: 'Nhập tên của bạn nhé!'}); return; }
+        if (!reporterName) { Toast.fire({ icon: 'warning', title: 'Nhắc nhở', text: 'Nhập tên của bạn nhé!'}); return; }
         
         const checkedTasks = Array.from(document.querySelectorAll('#taskGrid input[type="checkbox"]:checked')).map(cb => cb.value);
         if (checkedTasks.length === 0) { Toast.fire({ icon: 'warning', title: 'Chưa chọn', text: 'Chọn ít nhất 1 nhiệm vụ bị lỗi!'}); return; }
@@ -356,12 +441,13 @@
             timestamp: new Date().toLocaleString('vi-VN'), status: 'pending'
         }).then(() => {
             localStorage.setItem('savedReporterName', reporterName);
-            Toast.fire({ icon: 'success', title: 'Thành công', text: 'Đã lưu báo cáo.'});
+            Toast.fire({ icon: 'success', title: 'Thành công', text: 'Đã gửi báo cáo lên hệ thống.'});
             document.getElementById('errorNote').value = '';
             document.querySelectorAll('#taskGrid input[type="checkbox"]:checked').forEach(cb => cb.checked = false);
         }).catch(error => Toast.fire({ icon: 'error', title: 'Lỗi', text: error.message }));
     });
 
+    // ADMIN ĐĂNG NHẬP
     document.getElementById('btnLoginAdmin').addEventListener('click', () => {
         if (document.getElementById('adminCode').value === adminCodeStr) {
             isAdmin = true;
@@ -373,6 +459,7 @@
         } else { Toast.fire({ icon: 'error', title: 'Từ chối', text: 'Sai mã Admin!'}); }
     });
 
+    // ADMIN ĐĂNG XUẤT
     document.getElementById('btnLogoutAdmin').addEventListener('click', () => {
         isAdmin = false; localStorage.removeItem('savedAdminCode');
         document.getElementById('adminCode').value = '';
@@ -381,17 +468,19 @@
         loadAllData();
     });
 
+    // XÓA TẤT CẢ
     document.getElementById('btnDeleteAll').addEventListener('click', () => {
         Toast.fire({
             title: 'Xóa toàn bộ?', text: "Dữ liệu sẽ mất vĩnh viễn!", icon: 'warning',
             showCancelButton: true, confirmButtonText: 'Xóa', cancelButtonText: 'Hủy'
         }).then((result) => {
             if (result.isConfirmed) {
-                remove(ref(db, 'error_reports')).then(() => Toast.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã xóa', showConfirmButton: false, timer: 2000 }));
+                remove(ref(db, 'error_reports')).then(() => Toast.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã xóa toàn bộ', showConfirmButton: false, timer: 2000 }));
             }
         });
     });
 
+    // TẢI DỮ LIỆU
     function loadAllData() {
         onValue(ref(db, 'error_reports'), (snapshot) => {
             const data = snapshot.val();
@@ -412,22 +501,29 @@
                     
                     let actionHtml = isFixed 
                         ? `<span class="status-badge status-fixed">✔ Đã Fix Xong</span>` 
-                        : (isAdmin ? `<button class="btn-success btn-fix" data-id="${key}">✅ Đánh dấu Đã Fix</button>` : `<span class="status-badge status-pending">⏳ Đang xử lý</span>`);
+                        : (isAdmin ? `<button class="btn btn-fix btn-mark-fix" data-id="${key}">✅ Đánh dấu Đã Fix</button>` : `<span class="status-badge status-pending">⏳ Đang xử lý</span>`);
 
                     item.innerHTML = `
-                        <div class="report-header"><div class="report-user">👤 ${report.reporterName}</div><div class="report-time">${report.timestamp}</div></div>
-                        <div class="tags">${tagsHtml}</div>${noteHtml}<div class="action-area">${actionHtml}</div>
+                        <div class="report-header">
+                            <div class="report-user">👤 ${report.reporterName}</div>
+                            <div class="report-time">${report.timestamp}</div>
+                        </div>
+                        <div class="tags">${tagsHtml}</div>
+                        ${noteHtml}
+                        <div class="action-area">${actionHtml}</div>
                     `;
                     reportListDiv.appendChild(item);
                 });
 
-                document.querySelectorAll('.btn-fix').forEach(btn => {
+                document.querySelectorAll('.btn-mark-fix').forEach(btn => {
                     btn.addEventListener('click', function() {
                         update(ref(db, 'error_reports/' + this.getAttribute('data-id')), { status: 'fixed' });
                         Toast.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã Fix', showConfirmButton: false, timer: 1500 });
                     });
                 });
-            } else { reportListDiv.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted);">Không có lỗi nào.</div>'; }
+            } else { 
+                reportListDiv.innerHTML = '<div style="text-align:center; padding: 20px; color: rgba(255,255,255,0.6); font-size: 13.5px;">Không có lỗi nào.</div>'; 
+            }
         });
     }
 </script>
