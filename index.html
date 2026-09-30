@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Báo Lỗi - 3D Dark Glass</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --primary: #6366f1;         
+            --secondary: #8b5cf6;       
+            --success: #10b981;         
+            --danger: #ef4444;          
+            --warning: #f59e0b;         
+            --text-main: #f8fafc;       
+            --text-muted: #94a3b8;      
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --bg-glass: rgba(15, 23, 42, 0.6); /* Kính mờ màu tối */
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Quicksand', sans-serif; }
+
+        body {
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 40px 15px;
+            display: flex;
+            justify-content: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Nền Three.js */
+        #canvas-container {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1;
+            background: #0f172a; /* Xanh đen */
+        }
+
+        .container {
+            width: 100%;
+            max-width: 850px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px; 
+            z-index: 1;
+        }
+
+        /* Thẻ Card - Dark Glassmorphism */
+        .card {
+            background-color: var(--bg-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-glass);
+        }
+
+        h2, h3 { font-weight: 700; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; color: #ffffff; }
+        h2 { font-size: 24px; padding-bottom: 15px; border-bottom: 1px solid var(--border-glass); }
+        h3 { font-size: 20px; }
+
+        .form-group { margin-bottom: 25px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 10px; color: #e2e8f0; font-size: 15px; }
+        
+        .form-control {
+            width: 100%; padding: 15px 18px; border: 1px solid var(--border-glass); border-radius: 12px;
+            font-size: 15px; background: rgba(0, 0, 0, 0.3); color: #ffffff;
+            transition: all 0.3s ease; outline: none; font-weight: 500;
+        }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); background: rgba(0,0,0,0.5); }
+        .form-control::placeholder { color: #64748b; font-weight: 500;}
+        textarea.form-control { min-height: 110px; resize: vertical; }
+
+        /* Lưới Task */
+        .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; margin-bottom: 30px; }
+        .task-label { cursor: pointer; display: block; }
+        .task-label input { display: none; }
+        
+        .task-box {
+            background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); border-radius: 12px; padding: 12px 10px;
+            text-align: center; font-weight: 600; font-size: 14px; color: var(--text-muted);
+            transition: all 0.3s ease; user-select: none;
+        }
+        .task-label:hover .task-box { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
+        
+        .task-label input:checked + .task-box {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #ffffff; border-color: transparent; box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3); transform: translateY(-2px);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary)); 
+            color: white; border: none; padding: 16px 20px; font-size: 15px; font-weight: 700;
+            border-radius: 12px; cursor: pointer; width: 100%; transition: all 0.3s ease;
+            box-shadow: 0 8px 15px rgba(99, 102, 241, 0.25);
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 20px rgba(99, 102, 241, 0.4); }
+        
+        .btn-danger { background: var(--danger); box-shadow: 0 8px 15px rgba(239, 68, 68, 0.2);}
+        .btn-danger:hover { background: #dc2626; box-shadow: 0 12px 20px rgba(239, 68, 68, 0.4); }
+        
+        .btn-success { background: rgba(16, 185, 129, 0.2); color: var(--success); width: auto; padding: 8px 16px; font-size: 14px; box-shadow: none; border: 1px solid var(--success);}
+        .btn-success:hover { background: var(--success); color: white; transform: translateY(-2px);}
+        
+        .btn-secondary { background: rgba(255,255,255,0.1); color: #ffffff; box-shadow: none; border: 1px solid var(--border-glass);}
+        .btn-secondary:hover { background: rgba(255,255,255,0.2); }
+
+        /* KHU VỰC CÓ THANH CUỘN (SCROLL) */
+        .report-list { 
+            display: flex; flex-direction: column; gap: 15px; 
+            max-height: 450px; /* Giới hạn chiều cao */
+            overflow-y: auto;  /* Bật scroll dọc */
+            padding-right: 10px; /* Tạo khoảng trống cho thanh cuộn */
+        }
+        
+        /* Tùy chỉnh thanh cuộn cho đẹp */
+        .report-list::-webkit-scrollbar { width: 6px; }
+        .report-list::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 10px; }
+        .report-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+        .report-list::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }
+
+        .report-item {
+            background: rgba(0, 0, 0, 0.2); border-radius: 14px; padding: 20px;
+            border: 1px solid var(--border-glass); border-left: 4px solid var(--warning); 
+            display: flex; flex-direction: column; gap: 12px; transition: 0.3s;
+        }
+        .report-item:hover { background: rgba(0, 0, 0, 0.4); }
+        .report-item.fixed { border-left-color: var(--success); opacity: 0.75;}
+        
+        .report-header { display: flex; justify-content: space-between; align-items: center; }
+        .report-user { font-weight: 700; font-size: 16px; color: #ffffff; }
+        .report-time { font-size: 12px; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 20px;}
+        
+        .report-note { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; font-size: 14px; color: #cbd5e1; border: 1px dashed var(--border-glass);}
+        
+        .tags { display: flex; flex-wrap: wrap; gap: 8px;}
+        .tag { background: rgba(239, 68, 68, 0.15); color: #fca5a5; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid rgba(239,68,68,0.3);}
+        .report-item.fixed .tag { background: rgba(255,255,255,0.05); color: #94a3b8; border-color: transparent; text-decoration: line-through;}
+
+        .action-area { display: flex; justify-content: flex-end; align-items: center; border-top: 1px solid var(--border-glass); padding-top: 12px; margin-top: 5px;}
+        .status-badge { font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 8px;}
+        .status-pending { background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.2);}
+        .status-fixed { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2);}
+
+        .admin-login { display: flex; gap: 12px; }
+        .admin-login button { width: auto; flex-shrink: 0; }
+        .hidden { display: none !important; }
+        .red-star { color: var(--danger); }
+    </style>
+</head>
+<body>
+
+<!-- Nền 3D Vũ trụ -->
+<div id="canvas-container"></div>
+
+<div class="container">
+    <!-- FORM BÁO LỖI -->
+    <div class="card" id="userPanel">
+        <h2>✨ Báo Cáo Nhiệm Vụ Lỗi</h2>
+        
+        <div class="form-group">
+            <label for="reporterName">Tên nhân vật / Người báo cáo <span class="red-star">*</span></label>
+            <input type="text" id="reporterName" class="form-control" placeholder="Nhập tên của bạn...">
+        </div>
+        
+        <label style="font-weight: 600; margin-bottom: 12px; display: block; color: #e2e8f0; font-size: 15px;">Vui lòng chọn các nhiệm vụ bị lỗi: <span class="red-star">*</span></label>
+        <div class="task-grid" id="taskGrid">
+            <!-- JS Render -->
+        </div>
+
+        <div class="form-group">
+            <label for="errorNote">Ghi chú chi tiết (Không bắt buộc)</label>
+            <textarea id="errorNote" class="form-control" placeholder="Mô tả cụ thể vấn đề..."></textarea>
+        </div>
+        
+        <button id="btnSubmit" class="btn">🚀 Gửi Lên Hệ Thống</button>
+    </div>
+
+    <!-- DANH SÁCH CÓ THANH CUỘN -->
+    <div class="card" id="publicReportArea">
+        <h3>📋 Nhật Ký Báo Cáo</h3>
+        <div class="report-list" id="reportList">
+            <div style="text-align:center; padding: 20px; color: var(--text-muted); font-weight: 500;">Đang tải dữ liệu...</div>
+        </div>
+    </div>
+
+    <!-- ADMIN -->
+    <div class="card admin-section">
+        <h3>🛡 Dành Cho Quản Trị Viên</h3>
+        
+        <div class="admin-login" id="adminLoginArea">
+            <input type="password" id="adminCode" class="form-control" placeholder="Mã truy cập Admin...">
+            <button id="btnLoginAdmin" class="btn btn-secondary">Đăng Nhập</button>
+        </div>
+        
+        <div id="adminPanel" class="hidden">
+            <div style="background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 12px; border-radius: 12px; text-align: center; margin-bottom: 20px; font-weight: 600; border: 1px solid rgba(16,185,129,0.3);">
+                Đã mở khóa quyền Admin.
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button id="btnDeleteAll" class="btn btn-danger" style="width: auto;">🗑️ Xóa Toàn Bộ Lịch Sử</button>
+                <button id="btnLogoutAdmin" class="btn btn-secondary" style="width: auto;">🚪 Đăng Xuất</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script Three.js -->
+<script>
+    const initThreeJS = () => {
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x0f172a, 0.001);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 2000);
+        camera.position.z = 800;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+
+        const geometry = new THREE.BufferGeometry();
+        const particleCount = 3000; 
+        const posArray = new Float32Array(particleCount * 3);
+        const colorArray = new Float32Array(particleCount * 3);
+
+        const color1 = new THREE.Color(0x6366f1); 
+        const color2 = new THREE.Color(0x8b5cf6); 
+        const color3 = new THREE.Color(0xffffff);
+        
+        for(let i = 0; i < particleCount * 3; i+=3) {
+            posArray[i] = (Math.random() - 0.5) * 3000;
+            posArray[i+1] = (Math.random() - 0.5) * 3000;
+            posArray[i+2] = (Math.random() - 0.5) * 3000;
+
+            let mixedColor = color1.clone().lerp(color2, Math.random());
+            if(Math.random() > 0.8) mixedColor = color3; // Điểm xuyết sao trắng
+
+            colorArray[i] = mixedColor.r;
+            colorArray[i+1] = mixedColor.g;
+            colorArray[i+2] = mixedColor.b;
+        }
+        
+        geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+        
+        const material = new THREE.PointsMaterial({ size: 4, vertexColors: true, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending });
+        const particlesMesh = new THREE.Points(geometry, material);
+        scene.add(particlesMesh);
+
+        let mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX - window.innerWidth / 2) * 0.0005;
+            mouseY = (e.clientY - window.innerHeight / 2) * 0.0005;
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        const animate = () => {
+            requestAnimationFrame(animate);
+            particlesMesh.rotation.y += 0.001;
+            particlesMesh.rotation.x += 0.0005;
+            
+            camera.position.x += (mouseX * 500 - camera.position.x) * 0.05;
+            camera.position.y += (-mouseY * 500 - camera.position.y) * 0.05;
+            camera.lookAt(scene.position);
+            
+            renderer.render(scene, camera);
+        };
+        animate();
+    }
+    initThreeJS();
+</script>
+
+<!-- Script Logic Firebase -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getDatabase, ref, push, set, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB2doYct57cRcL49oNGNumWrLJmRtsKQGg",
+        authDomain: "chatvnnn-867f6.firebaseapp.com",
+        databaseURL: "https://chatvnnn-867f6-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "chatvnnn-867f6",
+        storageBucket: "chatvnnn-867f6.firebasestorage.app",
+        messagingSenderId: "780617896445",
+        appId: "1:780617896445:web:118ee46f43ff1a48c28994"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const adminCodeStr = "abc1"; 
+    let isAdmin = false;
+
+    const Toast = Swal.mixin({
+        background: '#1e293b', color: '#f8fafc',
+        customClass: { popup: 'swal2-popup-custom', confirmButton: 'btn', cancelButton: 'btn btn-secondary' },
+        buttonsStyling: false
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedName = localStorage.getItem('savedReporterName');
+        if (savedName) document.getElementById('reporterName').value = savedName;
+
+        const savedAdmin = localStorage.getItem('savedAdminCode');
+        if (savedAdmin === adminCodeStr) {
+            isAdmin = true;
+            document.getElementById('adminLoginArea').classList.add('hidden');
+            document.getElementById('adminPanel').classList.remove('hidden');
+        }
+        loadAllData();
+    });
+
+    const taskList = [
+        "Mê Cung", "Luyện Đan", "Đua Top", "Mạng Xã Hội", "Dọn Bình Luận", 
+        "Thông Tin", "Nhập CODE", "Trung Thu", "Mở Rương", "Linh Dược", "Sách Đan", "Mở Sách",
+        "Kết Bạn", "Chiến Tích", "Thiên Đạo", "Huyền Cơ", "Danh Hiệu", "Quét Pháp Tướng",
+        "Đổi Tài Nguyên", "Cắn Đan", "Pháp Bảo", "Đổi Hệ Thống", "Điểm Danh", "Tế Lễ",
+        "Phúc Lợi", "Thí Luyện", "Hoang Vực", "Khoáng Mạch", "Vấn Đáp", "Tiên Duyên",
+        "Đổ Thạch", "Bí Cảnh", "Vòng Quay", "Pháp Tướng", "HĐ Ngày", "Tặng Quà",
+        "Theo Dõi", "Độ Kiếp", "Buff", "Bát Quái"
+    ];
+
+    const taskGrid = document.getElementById('taskGrid');
+    taskList.forEach((task) => {
+        const label = document.createElement('label');
+        label.className = 'task-label';
+        label.innerHTML = `<input type="checkbox" value="${task}"><div class="task-box">${task}</div>`;
+        taskGrid.appendChild(label);
+    });
+
+    document.getElementById('btnSubmit').addEventListener('click', () => {
+        const reporterName = document.getElementById('reporterName').value.trim();
+        const errorNote = document.getElementById('errorNote').value.trim();
+
+        if (!reporterName) { Toast.fire({ icon: 'warning', title: 'Thiếu thông tin', text: 'Nhập tên của bạn nhé!'}); return; }
+        
+        const checkedTasks = Array.from(document.querySelectorAll('#taskGrid input[type="checkbox"]:checked')).map(cb => cb.value);
+        if (checkedTasks.length === 0) { Toast.fire({ icon: 'warning', title: 'Chưa chọn', text: 'Chọn ít nhất 1 nhiệm vụ bị lỗi!'}); return; }
+
+        Toast.fire({ title: 'Đang gửi...', didOpen: () => { Swal.showLoading(); } });
+
+        set(push(ref(db, 'error_reports')), {
+            reporterName: reporterName, tasks: checkedTasks, note: errorNote,
+            timestamp: new Date().toLocaleString('vi-VN'), status: 'pending'
+        }).then(() => {
+            localStorage.setItem('savedReporterName', reporterName);
+            Toast.fire({ icon: 'success', title: 'Thành công', text: 'Đã lưu báo cáo.'});
+            document.getElementById('errorNote').value = '';
+            document.querySelectorAll('#taskGrid input[type="checkbox"]:checked').forEach(cb => cb.checked = false);
+        }).catch(error => Toast.fire({ icon: 'error', title: 'Lỗi', text: error.message }));
+    });
+
+    document.getElementById('btnLoginAdmin').addEventListener('click', () => {
+        if (document.getElementById('adminCode').value === adminCodeStr) {
+            isAdmin = true;
+            localStorage.setItem('savedAdminCode', adminCodeStr);
+            document.getElementById('adminLoginArea').classList.add('hidden');
+            document.getElementById('adminPanel').classList.remove('hidden');
+            Toast.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đăng nhập thành công', showConfirmButton: false, timer: 1500 });
+            loadAllData();
+        } else { Toast.fire({ icon: 'error', title: 'Từ chối', text: 'Sai mã Admin!'}); }
+    });
+
+    document.getElementById('btnLogoutAdmin').addEventListener('click', () => {
+        isAdmin = false; localStorage.removeItem('savedAdminCode');
+        document.getElementById('adminCode').value = '';
+        document.getElementById('adminPanel').classList.add('hidden');
+        document.getElementById('adminLoginArea').classList.remove('hidden');
+        loadAllData();
+    });
+
+    document.getElementById('btnDeleteAll').addEventListener('click', () => {
+        Toast.fire({
+            title: 'Xóa toàn bộ?', text: "Dữ liệu sẽ mất vĩnh viễn!", icon: 'warning',
+            showCancelButton: true, confirmButtonText: 'Xóa', cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                remove(ref(db, 'error_reports')).then(() => Toast.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã xóa', showConfirmButton: false, timer: 2000 }));
+            }
+        });
+    });
+
+    function loadAllData() {
+        onValue(ref(db, 'error_reports'), (snapshot) => {
+            const data = snapshot.val();
+            const reportListDiv = document.getElementById('reportList');
+            reportListDiv.innerHTML = ''; 
+
+            if (data) {
+                const keys = Object.keys(data).reverse();
+                keys.forEach(key => {
+                    const report = data[key];
+                    const isFixed = report.status === 'fixed';
+                    
+                    let tagsHtml = ''; if(report.tasks) report.tasks.forEach(t => tagsHtml += `<span class="tag">${t}</span>`);
+                    let noteHtml = ''; if (report.note && report.note.trim() !== '') noteHtml = `<div class="report-note">${report.note}</div>`;
+
+                    const item = document.createElement('div');
+                    item.className = `report-item ${isFixed ? 'fixed' : ''}`;
+                    
+                    let actionHtml = isFixed 
+                        ? `<span class="status-badge status-fixed">✔ Đã Fix Xong</span>` 
+                        : (isAdmin ? `<button class="btn-success btn-fix" data-id="${key}">✅ Đánh dấu Đã Fix</button>` : `<span class="status-badge status-pending">⏳ Đang xử lý</span>`);
+
+                    item.innerHTML = `
+                        <div class="report-header"><div class="report-user">👤 ${report.reporterName}</div><div class="report-time">${report.timestamp}</div></div>
+                        <div class="tags">${tagsHtml}</div>${noteHtml}<div class="action-area">${actionHtml}</div>
+                    `;
+                    reportListDiv.appendChild(item);
+                });
+
+                document.querySelectorAll('.btn-fix').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        update(ref(db, 'error_reports/' + this.getAttribute('data-id')), { status: 'fixed' });
+                        Toast.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã Fix', showConfirmButton: false, timer: 1500 });
+                    });
+                });
+            } else { reportListDiv.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted);">Không có lỗi nào.</div>'; }
+        });
+    }
+</script>
+</body>
+</html>
