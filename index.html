@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Báo Lỗi - Glassmorphism UI</title>
+    <title>Hệ Thống Báo Lỗi - Hoa Đào & Tuyết Rơi</title>
     
-    <!-- Import font theo chuẩn của bạn -->
+    <!-- Import font -->
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Noto+Serif:wght@400;700&display=swap&subset=vietnamese" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- SweetAlert2 cho thông báo xịn -->
+    <!-- Three.js (Hiệu ứng 3D Hoa Đào & Tuyết) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
@@ -24,28 +27,32 @@
             -webkit-font-smoothing: antialiased !important;
         }
 
-        body {
-            /* Hình nền giống với trang Login của bạn */
-            background: url('https://c.wallhere.com/photos/da/70/digital_art_landscape_illustration_skyline-2285476.jpg!d') no-repeat center center fixed;
+        .bg-layer {
+            position: fixed; inset: 0; z-index: -10;
+            background: url('https://c.wallhere.com/photos/da/70/digital_art_landscape_illustration_skyline-2285476.jpg!d') no-repeat center center;
             background-size: cover;
+        }
+        
+        .blur-layer {
+            position: fixed; inset: 0; z-index: -9;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        #canvas-container {
+            position: fixed; inset: 0; z-index: -1; 
+            pointer-events: none; 
+        }
+
+        body {
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: flex-start;
             padding: 30px 15px;
-            position: relative;
             color: #fff;
-        }
-
-        /* Lớp phủ làm tối hình nền */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(8px); /* Độ mờ vừa phải */
-            -webkit-backdrop-filter: blur(8px);
-            z-index: -1;
+            overflow-x: hidden;
         }
 
         .main-wrapper {
@@ -54,235 +61,103 @@
             display: flex;
             flex-direction: column;
             gap: 25px;
+            z-index: 1; 
         }
 
-        /* =========================================
-           KHUNG KÍNH MỜ (Glass Container)
-           ========================================= */
+        /* KHUNG KÍNH MỜ */
         .glass-container {
-            background: transparent;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
+            background: rgba(20, 20, 30, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0px 15px 30px rgba(0, 0, 0, 0.5);
             border-radius: 12px;
             padding: 30px 35px;
             position: relative;
             animation: overlayFadeIn 0.4s ease forwards;
         }
 
-        h2, h3 {
-            text-align: center;
-            margin-top: 0;
-            color: #fff;
-            text-transform: uppercase;
-        }
+        h2, h3 { text-align: center; margin-top: 0; color: #fff; text-transform: uppercase; }
         
         h2 {
-            font-size: 24px;
-            margin-bottom: 25px;
-            color: #fde047; /* Vàng như thẻ Tiêu đề */
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 24px; margin-bottom: 25px;
+            color: #fde047; border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
             padding-bottom: 15px;
         }
 
-        h3 {
-            font-size: 20px;
-            margin-bottom: 20px;
-        }
+        h3 { font-size: 20px; margin-bottom: 20px; }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: rgba(255,255,255,0.9);
-            font-size: 14.5px;
-            font-weight: 600;
-        }
-
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: rgba(255,255,255,0.9); font-size: 14.5px; font-weight: 600; }
         .red-star { color: #ff4d4d; }
 
-        /* Ô Nhập Liệu */
-        .input-box { position: relative; width: 100%; margin-bottom: 20px; }
-        
         .form-control {
-            width: 100%;
-            background: transparent !important;
-            border: 2px solid rgba(255, 255, 255, 0.2) !important;
-            border-radius: 6px !important;
-            font-size: 15px !important;
-            color: #fff !important;
-            padding: 12px 15px !important;
-            box-shadow: none !important;
-            outline: none;
-            transition: 0.2s;
+            width: 100%; background: rgba(0, 0, 0, 0.3) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            border-radius: 6px !important; font-size: 15px !important; color: #fff !important;
+            padding: 12px 15px !important; outline: none; transition: 0.2s;
         }
         
         .form-control:focus {
-            border-color: #fde047 !important;
-            background: rgba(255,255,255,0.05) !important;
+            border-color: #fde047 !important; background: rgba(0,0,0,0.5) !important; box-shadow: 0 0 0 3px rgba(253, 224, 71, 0.1);
         }
-
-        .form-control::placeholder {
-            color: rgba(255, 255, 255, 0.6) !important;
-        }
-        
+        .form-control::placeholder { color: rgba(255, 255, 255, 0.5) !important; }
         textarea.form-control { resize: vertical; min-height: 90px; }
 
-        /* Lưới Task */
-        .task-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            gap: 10px;
-            margin-bottom: 25px;
-        }
-        
+        .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-bottom: 25px; }
         .task-label { cursor: pointer; display: block; }
         .task-label input { display: none; }
         
         .task-box {
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 10px;
-            text-align: center;
-            font-size: 13.5px;
-            font-weight: 500;
-            color: #e2e8f0;
-            transition: 0.2s;
-            user-select: none;
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;
+            padding: 10px; text-align: center; font-size: 13.5px; font-weight: 500;
+            color: #e2e8f0; transition: 0.2s; user-select: none;
         }
-        
-        .task-label:hover .task-box { background: rgba(255,255,255,0.15); }
-
+        .task-label:hover .task-box { background: rgba(255,255,255,0.1); }
         .task-label input:checked + .task-box {
-            background: rgba(253, 224, 71, 0.15); /* Vàng nhạt */
-            border-color: #fde047;
-            color: #fde047;
-            font-weight: 600;
-            transform: translateX(2px);
+            background: rgba(253, 224, 71, 0.15); border-color: #fde047; color: #fde047; font-weight: 600; transform: translateX(2px);
         }
 
-        /* Nút Bấm Chung */
         .btn {
-            width: 100%;
-            height: 42px;
-            background: #fff;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 15px;
-            font-weight: 700;
-            color: #333;
-            transition: 0.2s;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            width: 100%; height: 42px; background: #fff; border: none; border-radius: 6px;
+            cursor: pointer; font-size: 15px; font-weight: 700; color: #333; transition: 0.2s;
         }
-        
         .btn:hover { background: #eee; transform: translateY(-1px); }
         .btn:active { transform: translateY(1px); }
         
-        /* Custom Nút Bấm */
-        .btn-submit {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            border: 1.5px solid #34d399;
-        }
-        .btn-submit:hover { filter: brightness(1.1); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
+        .btn-submit { background: linear-gradient(135deg, #0ea5e9, #2563eb); color: white; border: 1px solid #38bdf8; }
+        .btn-submit:hover { filter: brightness(1.1); box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4); }
 
-        .btn-danger {
-            background: #d32f2f;
-            color: white;
-            border: none;
-            width: auto;
-            padding: 0 15px;
-        }
+        .btn-danger { background: #d32f2f; color: white; width: auto; padding: 0 15px; }
         .btn-danger:hover { background: #b71c1c; }
-
-        .btn-secondary {
-            background: rgba(255,255,255,0.1);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.3);
-            width: auto;
-            padding: 0 15px;
-        }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.3); width: auto; padding: 0 15px; }
         .btn-secondary:hover { background: rgba(255,255,255,0.2); }
 
-        .btn-fix {
-            background: linear-gradient(135deg, #0f766e, #059669);
-            color: white;
-            border: none;
-            width: auto;
-            padding: 6px 12px;
-            height: auto;
-            font-size: 13px;
-        }
-        .btn-fix:hover { filter: brightness(1.1); }
+        .btn-fix { background: linear-gradient(135deg, #10b981, #059669); color: white; width: auto; padding: 6px 12px; height: auto; font-size: 13px; }
+        .btn-fix:hover { filter: brightness(1.1); box-shadow: 0 0 10px rgba(16,185,129,0.3); }
 
-        /* Thanh Cuộn */
-        .report-list { 
-            display: flex; flex-direction: column; gap: 12px; 
-            max-height: 400px; 
-            overflow-y: auto;  
-            padding-right: 8px; 
-        }
-        
+        .report-list { display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto; padding-right: 8px; }
         .report-list::-webkit-scrollbar { width: 5px; }
         .report-list::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 5px; }
         .report-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 5px; }
 
-        /* Item Báo Cáo */
         .report-item {
-            background: rgba(20, 20, 30, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-left: 4px solid #f59e0b; 
-            border-radius: 10px;
-            padding: 15px 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            transition: 0.2s;
+            background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #f59e0b; border-radius: 10px; padding: 15px 18px;
+            display: flex; flex-direction: column; gap: 10px; transition: 0.2s;
         }
-        .report-item:hover { background: rgba(20, 20, 30, 0.8); }
+        .report-item:hover { background: rgba(0, 0, 0, 0.5); }
         .report-item.fixed { border-left-color: #10b981; opacity: 0.8; }
         
         .report-header { display: flex; justify-content: space-between; align-items: center; }
         .report-user { font-weight: 700; font-size: 15px; color: #fff; }
         .report-time { font-size: 12px; color: #a1a1aa; }
-        
-        .report-note { 
-            background: rgba(255,255,255,0.04); 
-            padding: 10px; 
-            border-radius: 6px; 
-            font-size: 13px; 
-            color: #cbd5e1; 
-            border: 1px dashed rgba(255,255,255,0.15);
-        }
+        .report-note { background: rgba(255,255,255,0.04); padding: 10px; border-radius: 6px; font-size: 13px; color: #cbd5e1; border: 1px dashed rgba(255,255,255,0.15);}
         
         .tags { display: flex; flex-wrap: wrap; gap: 6px;}
-        .tag { 
-            background: rgba(239, 68, 68, 0.15); 
-            color: #fca5a5; 
-            padding: 4px 8px; 
-            border-radius: 4px; 
-            font-size: 11.5px; 
-            font-weight: 600; 
-            border: 1px solid rgba(239,68,68,0.3);
-        }
-        .report-item.fixed .tag { 
-            background: rgba(255,255,255,0.05); 
-            color: #94a3b8; 
-            border-color: transparent; 
-            text-decoration: line-through;
-        }
+        .tag { background: rgba(239, 68, 68, 0.15); color: #fca5a5; padding: 4px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 600; border: 1px solid rgba(239,68,68,0.3);}
+        .report-item.fixed .tag { background: rgba(255,255,255,0.05); color: #94a3b8; border-color: transparent; text-decoration: line-through;}
 
-        .action-area { 
-            display: flex; justify-content: flex-end; align-items: center; 
-            border-top: 1px solid rgba(255,255,255,0.1); 
-            padding-top: 10px; margin-top: 5px;
-        }
+        .action-area { display: flex; justify-content: flex-end; align-items: center; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px; margin-top: 5px;}
         
         .status-badge { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px;}
         .status-pending { background: rgba(245, 158, 11, 0.1); color: #fde047; border: 1px solid rgba(245, 158, 11, 0.3);}
@@ -290,36 +165,30 @@
 
         .admin-login { display: flex; gap: 10px; }
         .admin-login .btn { width: auto; flex-shrink: 0; }
-        
         .hidden { display: none !important; }
 
         @keyframes overlayFadeIn { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
 
-        /* Tùy chỉnh SweetAlert2 cho hợp giao diện Kính mờ */
-        .swal-glass {
-            background: rgba(20, 20, 30, 0.95) !important;
-            border: 1px solid rgba(255,255,255,0.1) !important;
-            color: #fff !important;
-            backdrop-filter: blur(10px);
-        }
+        .swal-glass { background: rgba(20, 20, 30, 0.95) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; backdrop-filter: blur(10px); }
     </style>
 </head>
 <body>
 
+<div class="bg-layer"></div>
+<div class="blur-layer"></div>
+<div id="canvas-container"></div>
+
 <div class="main-wrapper">
-    <!-- KHU VỰC 1: FORM BÁO LỖI -->
     <div class="glass-container" id="userPanel">
         <h2>🛠️ Báo Cáo Nhiệm Vụ Lỗi</h2>
         
         <div class="form-group">
-            <label for="reporterName">Tên nhân vật / Người báo cáo <span class="red-star">*</span></label>
-            <input type="text" id="reporterName" class="form-control" placeholder="Nhập tên của bạn...">
+            <label for="reporterName">Tên nhân vật / Người báo cáo (Không bắt buộc)</label>
+            <input type="text" id="reporterName" class="form-control" placeholder="Nhập tên của bạn hoặc để trống...">
         </div>
         
         <label style="font-weight: 600; margin-bottom: 12px; display: block; color: rgba(255,255,255,0.9); font-size: 14.5px;">Vui lòng chọn các nhiệm vụ bị lỗi: <span class="red-star">*</span></label>
-        <div class="task-grid" id="taskGrid">
-            <!-- JS Render -->
-        </div>
+        <div class="task-grid" id="taskGrid"></div>
 
         <div class="form-group">
             <label for="errorNote">Ghi chú chi tiết (Không bắt buộc)</label>
@@ -329,7 +198,6 @@
         <button id="btnSubmit" class="btn btn-submit">🚀 Gửi Lên Hệ Thống</button>
     </div>
 
-    <!-- KHU VỰC 2: DANH SÁCH LỖI -->
     <div class="glass-container" id="publicReportArea">
         <h3>📋 Nhật Ký Báo Cáo</h3>
         <div class="report-list" id="reportList">
@@ -337,10 +205,8 @@
         </div>
     </div>
 
-    <!-- KHU VỰC 3: QUẢN TRỊ VIÊN -->
     <div class="glass-container admin-section">
         <h3>🛡 Dành Cho Quản Trị Viên</h3>
-        
         <div class="admin-login" id="adminLoginArea">
             <input type="password" id="adminCode" class="form-control" placeholder="Mã truy cập Admin...">
             <button id="btnLoginAdmin" class="btn">Đăng Nhập</button>
@@ -351,23 +217,133 @@
                 ✅ Đã mở khóa quyền Admin
             </div>
             <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button id="btnDeleteAll" class="btn btn-danger">🗑️ Xóa Toàn Bộ Lịch Sử</button>
+                <button id="btnDeleteAll" class="btn btn-danger">🗑️ Xóa Lịch Sử</button>
                 <button id="btnLogoutAdmin" class="btn btn-secondary">🚪 Đăng Xuất</button>
             </div>
         </div>
     </div>
     
-    <!-- Dòng Credit giống style gốc -->
-    <div style="text-align: center; color: rgba(255,255,255,0.6); font-size: 12px; margin-top: -10px;">
+    <div style="text-align: center; color: rgba(255,255,255,0.4); font-size: 12px; margin-top: -10px;">
         Made by TuanApple
     </div>
 </div>
 
+<!-- SCRIPT 3D: HOA ĐÀO & TUYẾT RƠI -->
+<script>
+    function initThreeJS() {
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 0, 40);
+
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        // 1. TẠO HOA ĐÀO RƠI LẢ TẢ
+        const petals = [];
+        const petalGeo = new THREE.PlaneGeometry(0.4, 0.7);
+        const posAttr = petalGeo.attributes.position;
+        for(let i = 0; i < posAttr.count; i++) {
+            if(posAttr.getY(i) > 0) { posAttr.setZ(i, 0.1); }
+        }
+        petalGeo.computeVertexNormals();
+
+        const petalMat = new THREE.MeshBasicMaterial({ 
+            color: 0xffa6c9, 
+            side: THREE.DoubleSide
+        });
+
+        for(let i = 0; i < 100; i++) {
+            let petal = new THREE.Mesh(petalGeo, petalMat);
+            petal.position.set((Math.random() - 0.5) * 100, Math.random() * 80, (Math.random() - 0.5) * 50 - 10);
+            petal.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+            petal.userData = {
+                vY: - (Math.random() * 0.08 + 0.03), 
+                vX: Math.random() * 0.04 - 0.02,   
+                rX: Math.random() * 0.04,           
+                rY: Math.random() * 0.04,
+                rZ: Math.random() * 0.04
+            };
+            scene.add(petal);
+            petals.push(petal);
+        }
+
+        // 2. TẠO HẠT TUYẾT RƠI TRẮNG
+        const snowflakeGeo = new THREE.BufferGeometry();
+        const snowCount = 400;
+        const snowPositions = new Float32Array(snowCount * 3);
+
+        for(let i = 0; i < snowCount * 3; i += 3) {
+            snowPositions[i] = (Math.random() - 0.5) * 100;     // X
+            snowPositions[i+1] = (Math.random() - 0.5) * 80;    // Y
+            snowPositions[i+2] = (Math.random() - 0.5) * 60;    // Z
+        }
+        snowflakeGeo.setAttribute('position', new THREE.BufferAttribute(snowPositions, 3));
+
+        const snowflakeMat = new THREE.PointsMaterial({
+            color: 0xffffff,
+            size: 0.6,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
+        });
+
+        const snowSystem = new THREE.Points(snowflakeGeo, snowflakeMat);
+        scene.add(snowSystem);
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            let time = clock.getElapsedTime();
+
+            // Cập nhật chuyển động Hoa Đào
+            petals.forEach(p => {
+                p.position.y += p.userData.vY;
+                p.position.x += p.userData.vX + Math.sin(time + p.position.y) * 0.01;
+                p.rotation.x += p.userData.rX;
+                p.rotation.y += p.userData.rY;
+                p.rotation.z += p.userData.rZ;
+
+                if (p.position.y < -35) {
+                    p.position.y = 40;
+                    p.position.x = (Math.random() - 0.5) * 100;
+                }
+            });
+
+            // Cập nhật chuyển động Tuyết Rơi
+            const positions = snowflakeGeo.attributes.position.array;
+            for(let i = 1; i < positions.length; i += 3) {
+                positions[i] -= 0.15; // Tốc độ rơi của tuyết
+                positions[i-1] += Math.sin(time + i) * 0.02; // Tuyết bay lượn nhẹ theo gió ngang
+
+                if(positions[i] < -40) {
+                    positions[i] = 40;
+                }
+            }
+            snowflakeGeo.attributes.position.needsUpdate = true;
+
+            renderer.render(scene, camera);
+        }
+        animate();
+    }
+    initThreeJS();
+</script>
+
+<!-- SCRIPT FIREBASE LOGIC -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getDatabase, ref, push, set, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-    // Thay thế bằng Config thật của bạn
     const firebaseConfig = {
         apiKey: "AIzaSyB2doYct57cRcL49oNGNumWrLJmRtsKQGg",
         authDomain: "chatvnnn-867f6.firebaseapp.com",
@@ -383,19 +359,14 @@
     const adminCodeStr = "abc1"; 
     let isAdmin = false;
 
-    // Cấu hình SweetAlert2 tối màu
     const Toast = Swal.mixin({
-        customClass: { 
-            popup: 'swal-glass', 
-            confirmButton: 'btn btn-submit', 
-            cancelButton: 'btn btn-secondary' 
-        },
+        customClass: { popup: 'swal-glass', confirmButton: 'btn btn-submit', cancelButton: 'btn btn-secondary' },
         buttonsStyling: false
     });
 
     document.addEventListener('DOMContentLoaded', () => {
         const savedName = localStorage.getItem('savedReporterName');
-        if (savedName) document.getElementById('reporterName').value = savedName;
+        if (savedName && savedName !== "Ẩn danh") document.getElementById('reporterName').value = savedName;
 
         const savedAdmin = localStorage.getItem('savedAdminCode');
         if (savedAdmin === adminCodeStr) {
@@ -424,15 +395,19 @@
         taskGrid.appendChild(label);
     });
 
-    // NÚT GỬI BÁO CÁO
     document.getElementById('btnSubmit').addEventListener('click', () => {
-        const reporterName = document.getElementById('reporterName').value.trim();
-        const errorNote = document.getElementById('errorNote').value.trim();
-
-        if (!reporterName) { Toast.fire({ icon: 'warning', title: 'Nhắc nhở', text: 'Nhập tên của bạn nhé!'}); return; }
+        let reporterName = document.getElementById('reporterName').value.trim();
+        const inputName = reporterName; 
         
+        if (!reporterName) reporterName = "Ẩn danh";
+        
+        const errorNote = document.getElementById('errorNote').value.trim();
         const checkedTasks = Array.from(document.querySelectorAll('#taskGrid input[type="checkbox"]:checked')).map(cb => cb.value);
-        if (checkedTasks.length === 0) { Toast.fire({ icon: 'warning', title: 'Chưa chọn', text: 'Chọn ít nhất 1 nhiệm vụ bị lỗi!'}); return; }
+        
+        if (checkedTasks.length === 0) { 
+            Toast.fire({ icon: 'warning', title: 'Chưa chọn', text: 'Chọn ít nhất 1 nhiệm vụ bị lỗi!'}); 
+            return; 
+        }
 
         Toast.fire({ title: 'Đang gửi...', didOpen: () => { Swal.showLoading(); } });
 
@@ -440,14 +415,13 @@
             reporterName: reporterName, tasks: checkedTasks, note: errorNote,
             timestamp: new Date().toLocaleString('vi-VN'), status: 'pending'
         }).then(() => {
-            localStorage.setItem('savedReporterName', reporterName);
+            if (inputName) localStorage.setItem('savedReporterName', inputName);
             Toast.fire({ icon: 'success', title: 'Thành công', text: 'Đã gửi báo cáo lên hệ thống.'});
             document.getElementById('errorNote').value = '';
             document.querySelectorAll('#taskGrid input[type="checkbox"]:checked').forEach(cb => cb.checked = false);
         }).catch(error => Toast.fire({ icon: 'error', title: 'Lỗi', text: error.message }));
     });
 
-    // ADMIN ĐĂNG NHẬP
     document.getElementById('btnLoginAdmin').addEventListener('click', () => {
         if (document.getElementById('adminCode').value === adminCodeStr) {
             isAdmin = true;
@@ -459,7 +433,6 @@
         } else { Toast.fire({ icon: 'error', title: 'Từ chối', text: 'Sai mã Admin!'}); }
     });
 
-    // ADMIN ĐĂNG XUẤT
     document.getElementById('btnLogoutAdmin').addEventListener('click', () => {
         isAdmin = false; localStorage.removeItem('savedAdminCode');
         document.getElementById('adminCode').value = '';
@@ -468,7 +441,6 @@
         loadAllData();
     });
 
-    // XÓA TẤT CẢ
     document.getElementById('btnDeleteAll').addEventListener('click', () => {
         Toast.fire({
             title: 'Xóa toàn bộ?', text: "Dữ liệu sẽ mất vĩnh viễn!", icon: 'warning',
@@ -480,7 +452,6 @@
         });
     });
 
-    // TẢI DỮ LIỆU
     function loadAllData() {
         onValue(ref(db, 'error_reports'), (snapshot) => {
             const data = snapshot.val();
