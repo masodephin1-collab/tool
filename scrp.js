@@ -10,9 +10,9 @@
       "Lôi đài Bản đấu đơn"
     ],
     {
-      "url": "https://raw.githubusercontent.com/ten-ban/repo/main/loc-do.js",
-      "name": "Lọc Pháp Bảo Hiếm",
-      "description": "Tự động khóa đồ cam/đỏ, phân giải đồ trắng/xanh",
+      "url": "https://raw.githubusercontent.com/masodephin1-collab/tool/refs/heads/main/top2dauloidai.js",
+      "name": "Top 2 lôi đài",
+      "description": "ĐẤU ĐỘI, ĐẤU ĐƠN ĐƯỢC",
       "version": "1.2"
     }
   ]
