@@ -29,9 +29,9 @@
       "version": "3.0"
     },
     {
-      "url": "URL_SCRIPT_6",
-      "name": "BETA",
-      "description": "BETA",
+      "url": "https://raw.githubusercontent.com/masodephin1-collab/tool/refs/heads/main/autotithi.js",
+      "name": "AUTO TỈ THÍ",
+      "description": "TỰ ĐỘNG GỬI TỈ THÍ TRONG 1 H GỬI QUÁ NHIỀU SẼ BỊ KHÓA GỬI 60P",
       "version": "1.0"
     },
     {
