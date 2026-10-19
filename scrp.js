@@ -35,10 +35,10 @@
       "version": "1.0"
     },
     {
-      "url": "URL_SCRIPT_7",
-      "name": "BETA",
-      "description": "BETA",
-      "version": "1.0"
+      "url": "https://raw.githubusercontent.com/masodephin1-collab/tool/refs/heads/main/tudanh3.js",
+      "name": "AUTO TỈ THÍ 3",
+      "description": "TỰ ĐÁNH CHO AC PHỤ CÓ PHÂN BIỆT ĐỊCH TA",
+      "version": "2.1"
     }
   ]
 }
