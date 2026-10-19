@@ -20,13 +20,13 @@
       "url": "https://raw.githubusercontent.com/masodephin1-collab/tool/refs/heads/main/Tudanh.js",
       "name": "Tự Đánh Lôi Đài",
       "description": "SCRIPT NÀY DÙNG CHO ACC PHỤ ĐÁNH ACC CHÍNH",
-      "version": "1.0"
+      "version": "2.0"
     },
     {
-      "url": "URL_SCRIPT_5",
-      "name": "BETA",
-      "description": "BETA",
-      "version": "1.0"
+      "url": "https://raw.githubusercontent.com/masodephin1-collab/tool/refs/heads/main/Tudanh2.js",
+      "name": "TỰ ĐÁNH LÔI ĐÀI 2 ",
+      "description": "DÙNG CHO ACC PHỤ ĐÁNH ACC CHÍNH",
+      "version": "3.0"
     },
     {
       "url": "URL_SCRIPT_6",
