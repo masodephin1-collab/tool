@@ -41,6 +41,12 @@
       "version": "1.0"
     },
     {
+      "url": "https://raw.githubusercontent.com/masodephin1-collab/tool/refs/heads/main/AUTOTITHI3.JS",
+      "name": "AUTO TỈ THÍ CHÂP NHẬN",
+      "description": "TỰ ĐỘNG NHẬN KHIÊU CHIẾN VÀ TỈ THÍ",
+      "version": "3.0"
+    },
+    {
       "url": "https://raw.githubusercontent.com/masodephin1-collab/tool/refs/heads/main/tudanh3.js",
       "name": "AUTO TỈ THÍ 3",
       "description": "TỰ ĐÁNH CHO AC PHỤ CÓ PHÂN BIỆT ĐỊCH TA",
