@@ -47,6 +47,12 @@
       "version": "3.0"
     },
     {
+      "url": "https://raw.githubusercontent.com/masodephin1-collab/tool/refs/heads/main/freevuaco.js",
+      "name": "Cờ Vua Cờ Tướng Cờ Caro Tiến Lên Miền Nam Tự Động",
+      "description": "Vua Cờ",
+      "version": "3.0"
+    },
+    {
       "url": "https://raw.githubusercontent.com/masodephin1-collab/tool/refs/heads/main/tudanh3.js",
       "name": "AUTO TỈ THÍ 3",
       "description": "TỰ ĐÁNH CHO AC PHỤ CÓ PHÂN BIỆT ĐỊCH TA",
